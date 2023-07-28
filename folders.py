@@ -6,7 +6,9 @@ import scipy.io
 import numpy as np
 import csv
 from openpyxl import load_workbook
-
+import exiftool
+import torchvision.transforms as transforms
+et = exiftool.ExifToolHelper()
 
 class LIVEFolder(data.Dataset):
 
@@ -118,6 +120,51 @@ class LIVEChallengeFolder(data.Dataset):
         length = len(self.samples)
         return length
 
+# hybrid dataset dataloader
+
+class HybridFolder(data.Dataset):
+
+    def __init__(self, root, index, transform, patch_num):
+
+        paths = []
+        for root2, _, files in os.walk(root):
+            for name in files:
+                if name.endswith(".bmp"):
+                    paths.append(os.path.abspath(os.path.join(root2, name)))
+
+        sample = []
+        for i, item in enumerate(index):
+            for aug in range(patch_num):
+                sample.append((paths[item-1], np.float32(os.path.split(os.path.split(paths[item-1])[0])[1])))
+        # print(sample[0])
+
+        self.samples = sample
+        self.transform = transform
+        self.PILToTensor = transforms.Compose([transforms.ToTensor()])
+        self.PILs = {}
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (sample, target) where target is class_index of the target class.
+        """
+
+        # we cache image tensors in GPU so we don't have huge CPU bottleneck issues
+        path, target = self.samples[index]
+        if path in self.PILs:
+            sample = self.PILs[path]
+        else:
+            sample = self.PILToTensor(pil_loader(path)).to("cuda")
+            self.PILs[path] = sample
+        sample = self.transform(sample)
+        return sample, target
+
+    def __len__(self):
+        length = len(self.samples)
+        return length
 
 class CSIQFolder(data.Dataset):
 
@@ -329,6 +376,8 @@ def getTIDFileName(path, suffix):
 
 
 def pil_loader(path):
-    with open(path, 'rb') as f:
-        img = Image.open(f)
-        return img.convert('RGB')
+    # with open(path, 'rb') as f:
+    #     img = Image.open(f)
+    #     return img.convert('RGB')
+    img = Image.open(path)
+    return img.convert('RGB')

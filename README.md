@@ -1,50 +1,71 @@
-# HyperIQA
+# hybridIQA
+An alternative aesthetic scorer based on hyperIQA
 
-This is the source code for the CVPR'20 paper "[Blindly Assess Image Quality in the Wild Guided by A Self-Adaptive Hyper Network](https://openaccess.thecvf.com/content_CVPR_2020/papers/Su_Blindly_Assess_Image_Quality_in_the_Wild_Guided_by_a_CVPR_2020_paper.pdf)".
+This scorer is intended primarily to score anime AI-gen images and sort aesthetic datasets.
 
-## Dependencies
+Place pretrained model from https://huggingface.co/Xerxemi/hybridIQA-V1 in ./pretrained.
 
-- Python 3.6+
-- PyTorch 0.4+
-- TorchVision
-- scipy
+Modified ImageReward branch here for benchmark: https://github.com/Xerxemi/ImageReward-hyperIQA-bench
 
-(optional for loading specific IQA Datasets)
-- csv (KonIQ-10k Dataset)
-- openpyxl (BID Dataset)
+Uses custom "hybrid" dataset and as such efficacy is questionable... only 50% accuracy on ImageReward Figure 3 test, though CLIP is also only 54%...
 
-## Usages
+(good for mini 1263 image dataset comprised of fully anime images on realistic gen test I guess)
 
-### Testing a single image
+![image](https://github.com/SatellaSatella/hybridIQA/assets/140206058/8d2d12d9-0b01-45a0-896c-5fa1127becda)
 
-Predicting image quality with our model trained on the Koniq-10k Dataset.
+## Dataset methodology:
 
-To run the demo, please download the pre-trained model at [Google drive](https://drive.google.com/file/d/1OOUmnbvpGea0LIGpIWEbOyxfWx6UCiiE/view?usp=sharing) or [Baidu cloud](https://pan.baidu.com/s/1yY3O8DbfTTtUwXn14Mtr8Q) (password: 1ty8), put it in 'pretrained' folder, then run:
+URL: https://huggingface.co/datasets/Xerxemi/hybridIQA-V1/
 
-```
-python demo.py
-```
+Total dataset size: 1263 images
 
-You will get a quality score ranging from 0-100, and a higher value indicates better image quality.
+------------------------------------------------------------------------------------------------------
 
-### Training & Testing on IQA databases
+1181 images generated at 1024x1024 using AUTOMATIC1111/stable-diffusion-webui, utilizing 5 models and 2 upscalers (Latent & None).
 
-Training and testing our model on the LIVE Challenge Dataset.
+Dynamic Prompts extension wildcards used for prompting.
 
-```
-python train_test_IQA.py
-```
+------------------------------------------------------------------------------------------------------
 
-Some available options:
-* `--dataset`: Training and testing dataset, support datasets: livec | koniq-10k | bid | live | csiq | tid2013.
-* `--train_patch_num`: Sampled image patch number per training image.
-* `--test_patch_num`: Sampled image patch number per testing image.
-* `--batch_size`: Batch size.
+Binned into "Artifact" and "Perfect" folders, then each folder is further binned into score range 1-5.
 
-When training or testing on CSIQ dataset, please put 'csiq_label.txt' in your own CSIQ folder.
+"Perfect" folder bins are shifted +2 on the score scale (scale 1-7) to increase importance of artifacts.
 
-## Citation
-If you find this work useful for your research, please cite our paper:
+------------------------------------------------------------------------------------------------------
+
+"8" folder bins are cherry-picked generations (not from the mass-produced image pool).
+
+"9" folder bins are real images from maccha and omutatsu.
+
+## Modifications to original architecture:
+
+Dataloader changed to be suitable for dataset structure (also caches images as tensor on GPU for speed rather than rereading all images on request).
+
+Optimizer swap Adam to Lion with LR/5, weight decay*5, and beta adjusted accordingly.
+
+Resnet50 backbone swapped with Resnet152.
+
+Some minor & major fixes to code.
+
+### Transforms:
+
+Patches per image increased 16x, from 25 to 400.
+
+15% random images converted to grayscale to remove color bias.
+
+RandomCrop replaced with RandomResizeCrop with bilinear interpolation & antialiasing (training only).
+
+### Inference:
+
+Patches per image increased from 10 to 25.
+
+### Training:
+
+Batch size increased to 300 - pretrained model trained to epoch 9.
+
+------------------------------------------------------------------------------------------------------
+
+## Citation:
 ```
 @InProceedings{Su_2020_CVPR,
 author = {Su, Shaolin and Yan, Qingsen and Zhu, Yu and Zhang, Cheng and Ge, Xin and Sun, Jinqiu and Zhang, Yanning},

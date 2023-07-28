@@ -60,6 +60,24 @@ class DataLoader(object):
                     torchvision.transforms.ToTensor(),
                     torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406),
                                                      std=(0.229, 0.224, 0.225))])
+        elif dataset == 'hybrid':
+            # Train transforms
+            if istrain:
+                transforms = torchvision.transforms.Compose([
+                    torchvision.transforms.RandomHorizontalFlip(),
+                    torchvision.transforms.RandomGrayscale(p=0.15),
+                    torchvision.transforms.RandomResizedCrop(size=patch_size, interpolation=torchvision.transforms.InterpolationMode.BILINEAR, antialias=True),
+                    torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406),
+                                                    std=(0.229, 0.224, 0.225))
+                ])
+            # Test transforms
+            else:
+                transforms = torchvision.transforms.Compose([
+                    torchvision.transforms.RandomGrayscale(p=0.15),
+                    torchvision.transforms.RandomCrop(size=patch_size),
+                    torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406),
+                                                    std=(0.229, 0.224, 0.225))
+                ])
 
         if dataset == 'live':
             self.data = folders.LIVEFolder(
@@ -78,6 +96,9 @@ class DataLoader(object):
                 root=path, index=img_indx, transform=transforms, patch_num=patch_num)
         elif dataset == 'tid2013':
             self.data = folders.TID2013Folder(
+                root=path, index=img_indx, transform=transforms, patch_num=patch_num)
+        elif dataset == 'hybrid':
+            self.data = folders.HybridFolder(
                 root=path, index=img_indx, transform=transforms, patch_num=patch_num)
 
     def get_data(self):

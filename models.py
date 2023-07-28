@@ -40,7 +40,7 @@ class HyperNet(nn.Module):
         self.f4 = target_fc4_size
         self.feature_size = feature_size
 
-        self.res = resnet50_backbone(lda_out_channels, target_in_size, pretrained=True)
+        self.res = resnet152_backbone(lda_out_channels, target_in_size, pretrained=True)
 
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
 
@@ -319,6 +319,23 @@ def resnet50_backbone(lda_out_channels, in_chn, pretrained=False, **kwargs):
     model = ResNetBackbone(lda_out_channels, in_chn, Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
         save_model = model_zoo.load_url(model_urls['resnet50'])
+        model_dict = model.state_dict()
+        state_dict = {k: v for k, v in save_model.items() if k in model_dict.keys()}
+        model_dict.update(state_dict)
+        model.load_state_dict(model_dict)
+    else:
+        model.apply(weights_init_xavier)
+    return model
+
+def resnet152_backbone(lda_out_channels, in_chn, pretrained=False, **kwargs):
+    """Constructs a ResNet-50 model_hyper.
+
+    Args:
+        pretrained (bool): If True, returns a model_hyper pre-trained on ImageNet
+    """
+    model = ResNetBackbone(lda_out_channels, in_chn, Bottleneck, [3, 4, 6, 3], **kwargs)
+    if pretrained:
+        save_model = model_zoo.load_url(model_urls['resnet152'])
         model_dict = model.state_dict()
         state_dict = {k: v for k, v in save_model.items() if k in model_dict.keys()}
         model_dict.update(state_dict)
