@@ -1,9 +1,7 @@
-# hybridIQA
+# hybridIQA-V1
 An alternative aesthetic scorer based on hyperIQA
 
 This scorer is intended primarily to score anime AI-gen images and sort aesthetic datasets.
-
-Place pretrained model from https://huggingface.co/Xerxemi/hybridIQA-V1 in ./pretrained.
 
 Modified ImageReward branch here for benchmark: https://github.com/Xerxemi/ImageReward-hyperIQA-bench
 
@@ -62,6 +60,14 @@ Patches per image increased from 10 to 25.
 ### Training:
 
 Batch size increased to 300 - pretrained model trained to epoch 9.
+
+## Usage:
+
+Place pretrained model from https://huggingface.co/Xerxemi/hybridIQA-V1 in ./pretrained.
+
+Images go in ./data/, then run demo.py with the filename to score.
+
+Training datasets must go in ./data/ and be set up accordingly in the scripts (need dataloader or supported format).
 
 ------------------------------------------------------------------------------------------------------
 
